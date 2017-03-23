@@ -6,7 +6,7 @@ interface.o: interface.c
 	$(CC) $(CFLAGS) -c interface.c
 
 interface: interface.o
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) -lm $< -o $@
 
 test: $(EXECUTABLES)
 	./interface example.txt
