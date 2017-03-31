@@ -6,20 +6,28 @@ typedef unsigned short int bool;
 #define true 1
 #define false 0
 
+#define NVAR 93333
+
 #define NMAX 9
 unsigned char tab[NMAX][NMAX];
-
-#define NVAR 2 * 9 * 9 * 9
-//bool vars[NVAR];
 
 // Table pour le kcl (l'indicage commence à 1)
 bool kcl[NMAX+1][NMAX+1][NMAX+1];
 // Table pour le kabxy (l'indicage commence à 1)
 bool kabxy[NMAX+1][3+1][3+1][3+1][3+1];
 
+// Counter
+int counter[NVAR+1];
+int _count = 1;
+
+int useCount();
+int useCounter(int position);
+int chercherKcl(int kcl);
+
 int main(int argc, char *argv[]) {
-	int x, y, z, a, b, k;
-	unsigned char c;
+	int x, y, z, a, b, k, c, l, i, j;
+	int c1, c2;
+	unsigned char ch;
 	
 	FILE *f_sudoku, *f_dimacs;
 	
@@ -36,6 +44,10 @@ int main(int argc, char *argv[]) {
 		perror(argv[1]);
 		exit(-2);
 	}
+	
+	// Initialisation de counter
+	for (i = 0 ; i <= NMAX + 1 ; i++)
+		counter[i] = 0;
 	
 	// Initialisation de kcl
 	for (x = 1 ; x <= NMAX ; x++)
@@ -56,10 +68,10 @@ int main(int argc, char *argv[]) {
 	{
 		for (y = 0 ; y < NMAX  ; y++)
 		{
-			fscanf(f_sudoku, "%c", &c);
-			if (c >= '0' && c <= '9')
+			fscanf(f_sudoku, "%c", &ch);
+			if (ch >= '0' && ch <= '9')
 			{
-				tab[x][y] = c;
+				tab[x][y] = ch;
 			}
 			else
 			{
@@ -67,6 +79,8 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
+	
+	fclose(f_sudoku);
 	
 	// Définition de kcl
 	for (x = 1 ; x <= NMAX ; x++)
@@ -113,8 +127,133 @@ int main(int argc, char *argv[]) {
 		exit(-3);
 	}
 	
-	fprintf(f_dimacs, "p cnf");
+	fprintf(f_dimacs, "p cnf 1458 22113");
+	
+	for (k = 1 ; k <= 9 ; k++)
+	{
+		// Hyp 1
+		for (c = 1 ; c <= 9 ; c++)
+		{
+			for (l = 1 ; l <= 9 ; l++)
+			{
+				for (i = 1 ; i <= 9 ; i++)
+				{
+					c1 = useCounter(k * 100 + c * 10 + l);
+					c2 = useCounter(k * 100 + i * 10 + l);
+					fprintf(f_dimacs, "-%i -%i 0\n", c1, c2);
+				}
+				
+				for (j = 1 ; j <= 9 ; j++)
+				{
+					c1 = useCounter(k * 100 + c * 10 + l);
+					c2 = useCounter(k * 100 + c * 10 + j);
+					fprintf(f_dimacs, "-%i -%i 0\n", c1, c2);
+				}
+			}
+		}
+		
+		// Hyp 2
+		for (a = 1 ; a <= 3 ; a++)
+		{
+			for (b = 1 ; b <= 3 ; b++)
+			{
+				for (x = 1 ; x <= 3 ; x++)
+				{
+					for (y = 1 ; y <= 3 ; y++)
+					{
+						for (i = 1 ; i <= 3 ; i++)
+						{
+							if (i != x)
+							{
+								for (j = 1 ; j <= 3 ; j++)
+								{
+									if (j != y)
+									{
+	c1 = useCounter(k * 10000 + a * 1000 + b * 100 + x * 10 + y);
+	c1 = useCounter(k * 10000 + a * 1000 + b * 100 + i * 10 + j);
+	fprintf(f_dimacs, "-%i -%i 0\n", c1, c2);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		// Hyp 3
+		for (c = 1 ; c <= 9 ; c++)
+		{
+			for (l = 1 ; l <= 9 ; l++)
+			{
+				for (i = 1 ; i <= 9 ; i++)
+				{
+					c1 = useCounter(k * 100 + c * 10 + l);
+					c2 = useCounter(i * 100 + c * 10 + l);
+					fprintf(f_dimacs, "-%i -%i 0\n", c1, c2);
+				}
+			}
+		}
+		
+		// Hyp 4
+		for (c = 1 ; c <= 9 ; c++)
+		{
+			for (l = 1 ; l <= 9 ; l++)
+			{
+				c1 = useCounter(k * 100 + c * 10 + l);
+				fprintf(f_dimacs, "%i ", c1);
+			}
+			fprintf(f_dimacs, "0\n");
+		}
+		
+		// Hyp 5
+		for (l = 1 ; l <= 9 ; l++)
+		{
+			for (c = 1 ; c <= 9 ; c++)
+			{
+				c1 = useCounter(k * 100 + c * 10 + l);
+				fprintf(f_dimacs, "%i ", c1);
+			}
+			fprintf(f_dimacs, "0\n");
+		}
+		
+		// Hyp 6
+		for (a = 1 ; a <= 3 ; a++)
+		{
+			for (b = 1 ; b <= 3 ; b++)
+			{
+				for (x = 1 ; x <= 3 ; x++)
+				{
+					for (y = 1 ; y <= 3 ; y++)
+					{
+						c1 = useCounter(k * 10000 + a * 1000 + b * 100 + x * 10 + y);
+						fprintf(f_dimacs, "%i ", c1);
+					}
+				}
+				fprintf(f_dimacs, "0\n");
+			}
+		}
+	}
+	
+	fclose(f_dimacs);
 	
 	
 	return EXIT_SUCCESS;
+}
+
+int useCount() {
+	_count++;
+	return _count;
+}
+
+int useCounter(int position) {
+	int count = _count;
+	
+	if (counter[position] == 0)
+	{
+		count = useCount();
+		counter[position] = count;
+	}
+	
+	return count;
 }
