@@ -20,17 +20,13 @@ bool kabxy[NMAX+1][3+1][3+1][3+1][3+1];
 int counter[NVAR+1];
 int _count = 0;
 
-// Ghosts Counter
-int _ghost = 1459;
-
-int useGhost();
 int useCount();
 int useCounter(int position);
 int chercherKcl(int kcl);
 
 int main(int argc, char *argv[]) {
 	int x, y, z, a, b, c, k, l, i, j;
-	int c1, c2, g, g1;
+	int c1, c2;
 	unsigned char ch;
 	
 	FILE *f_sudoku, *f_dimacs;
@@ -131,7 +127,7 @@ int main(int argc, char *argv[]) {
 		exit(-3);
 	}
 	
-	fprintf(f_dimacs, "p cnf 46692 25345\n"); // 22113 sans compter les doublons et les ghosts, 22842 sans compter les ghosts
+	fprintf(f_dimacs, "p cnf 1458 22842\n"); // 22113 sans compter les doublons et les ghosts, 22842 sans compter les ghosts, 25345 avec doublons et ghosts
 	
 	for (k = 1 ; k <= 9 ; k++)
 	{
@@ -144,18 +140,14 @@ int main(int argc, char *argv[]) {
 				{
 					c1 = useCounter(k * 100 + c * 10 + l);
 					c2 = useCounter(k * 100 + i * 10 + l);
-					g = useGhost();
-					fprintf(f_dimacs, "-%i -%i %i 0\n", c1, c2, g);
-					fprintf(f_dimacs, "-%i -%i -%i 0\n", c1, c2, g);
+					fprintf(f_dimacs, "-%i -%i 0\n", c1, c2);
 				}
 				
 				for (j = 1 ; j <= 9 ; j++)
 				{
 					c1 = useCounter(k * 100 + c * 10 + l);
 					c2 = useCounter(k * 100 + c * 10 + j);
-					g = useGhost();
-					fprintf(f_dimacs, "-%i -%i %i 0\n", c1, c2, g);
-					fprintf(f_dimacs, "-%i -%i -%i 0\n", c1, c2, g);
+					fprintf(f_dimacs, "-%i -%i 0\n", c1, c2);
 				}
 			}
 		}
@@ -179,9 +171,7 @@ int main(int argc, char *argv[]) {
 									{
 	c1 = useCounter(k * 10000 + a * 1000 + b * 100 + x * 10 + y);
 	c1 = useCounter(k * 10000 + a * 1000 + b * 100 + i * 10 + j);
-	g = useGhost();
-	fprintf(f_dimacs, "-%i -%i %i 0\n", c1, c2, g);
-	fprintf(f_dimacs, "-%i -%i -%i 0\n", c1, c2, g);
+	fprintf(f_dimacs, "-%i -%i 0\n", c1, c2);
 									}
 								}
 							}
@@ -200,9 +190,7 @@ int main(int argc, char *argv[]) {
 				{
 					c1 = useCounter(k * 100 + c * 10 + l);
 					c2 = useCounter(i * 100 + c * 10 + l);
-					g = useGhost();
-					fprintf(f_dimacs, "-%i -%i %i 0\n", c1, c2, g);
-					fprintf(f_dimacs, "-%i -%i -%i 0\n", c1, c2, g);
+					fprintf(f_dimacs, "-%i -%i 0\n", c1, c2);
 				}
 			}
 		}
@@ -210,32 +198,16 @@ int main(int argc, char *argv[]) {
 		// Hyp 4
 		for (c = 1 ; c <= 9 ; c++)
 		{
-			for (l = 1 ; l <= 8 ; l++)
+			for (l = 1 ; l <= 9 ; l++)
 			{
 				c1 = useCounter(k * 100 + c * 10 + l);
-				if (l == 1)
-				{
-					c2 = useCounter(k * 100 + c * 10 + l);
-					g = useGhost();
-					fprintf(f_dimacs, "%i %i %i 0\n", c1, c2, g);
-					l++;
-				}
-				else if (l == 8)
-				{
-					c2 = useCounter(k * 100 + c * 10 + l);
-					fprintf(f_dimacs, "-%i %i %i 0\n", g, c1, c2);
-				}
-				else
-				{
-					g1 = useGhost();
-					fprintf(f_dimacs, "-%i %i %i 0\n", g, c1, g1);
-					g = g1;
-				}
+				fprintf(f_dimacs, "%i ", c1);
 			}
+			fprintf(f_dimacs, "0\n");
 		}
 		
 		// Hyp 5
-		/*for (l = 1 ; l <= 9 ; l++)
+		for (l = 1 ; l <= 9 ; l++)
 		{
 			for (c = 1 ; c <= 9 ; c++)
 			{
@@ -243,35 +215,7 @@ int main(int argc, char *argv[]) {
 				fprintf(f_dimacs, "%i ", c1);
 			}
 			fprintf(f_dimacs, "0\n");
-		}*/
-		for (l = 1 ; l <= 9 ; l++)
-		{
-			for (c = 1 ; c <= 8 ; c++)
-			{
-				c1 = useCounter(k * 100 + c * 10 + l);
-				if (c == 1)
-				{
-					c2 = useCounter(k * 100 + c * 10 + l);
-					g = useGhost();
-					fprintf(f_dimacs, "%i %i %i 0\n", c1, c2, g);
-					l++;
-				}
-				else if (c == 8)
-				{
-					c2 = useCounter(k * 100 + c * 10 + l);
-					fprintf(f_dimacs, "-%i %i %i 0\n", g, c1, c2);
-				}
-				else
-				{
-					g1 = useGhost();
-					fprintf(f_dimacs, "-%i %i %i 0\n", g, c1, g1);
-					g = g1;
-				}
-			}
 		}
-		
-		
-		
 		
 		// Hyp 6
 		for (a = 1 ; a <= 3 ; a++)
@@ -283,26 +227,10 @@ int main(int argc, char *argv[]) {
 					for (y = 1 ; y <= 3 ; y++)
 					{
 						c1 = useCounter(k * 10000 + a * 1000 + b * 100 + x * 10 + y);
-						c2 = useCounter(k * 10000 + a * 1000 + b * 100 + x * 10 + y);
-						if (x == 1 && y == 1)
-						{
-							g = useGhost();
-							fprintf(f_dimacs, "%i %i %i 0\n", c1, c2, g);
-							y++;
-						}
-						else if (x == 3 && y == 2)
-						{
-							fprintf(f_dimacs, "-%i %i %i 0\n", g, c1, c2);
-							y++;
-						}
-						else
-						{
-							g1 = useGhost();
-							fprintf(f_dimacs, "-%i %i %i 0\n", g, c1, g1);
-							g = g1;
-						}
+						fprintf(f_dimacs, "%i ", c1);
 					}
 				}
+				fprintf(f_dimacs, "0\n");
 			}
 		}
 	}
@@ -312,12 +240,6 @@ int main(int argc, char *argv[]) {
 	
 	return EXIT_SUCCESS;
 }
-
-int useGhost() {
-	_ghost++;
-	return _ghost;
-}
-
 int useCount() {
 	_count++;
 	return _count;
