@@ -1,27 +1,27 @@
 CC=gcc
-CFLAGS=-Wall -Werror -g
-EXECUTABLES=interface 3sat
+CFLAGS=-g
+EXECUTABLES=interface 3sat solver
+EXTRA_FILES=n-sat.txt 3-sat.txt solution.txt
 
 all: $(EXECUTABLES)
 
-interface.o: interface.c
-	$(CC) $(CFLAGS) -c interface.c
+%.o: %.c
+	$(CC) $(CFLAGS) -c $<
 
-interface: interface.o
-	$(CC) $(CFLAGS) -lm $< -o $@
+interface: interface.o util.o
+	$(CC) $(CFLAGS) -lm $< util.o -o $@
 
-3sat.o: 3sat.c
-	$(CC) $(CFLAGS) -c 3sat.c
+3sat: 3sat.o util.o
+	$(CC) $(CFLAGS) -lm $< util.o -o $@
 
-3sat: 3sat.o
-	$(CC) $(CFLAGS) -lm $< -o $@
+solver: solver.o util.o
+	$(CC) $(CFLAGS) -lm $< util.o -o $@
 
 test: $(EXECUTABLES)
-	./interface examples/easy.txt
-	./3sat dimacs.txt result.txt
+	./sudoku-solver examples/easy2.txt
 
 open:
-	gedit --new-window interface.c Makefile dimacs.txt examples/easy.txt &
+	gedit --new-window interface.c 3sat.c solver.c dimacs.txt easy-solv.txt Makefile sudoku-solver.sh &
 
 clean:
-	rm -f $(EXECUTABLES) *.o 2> /dev/null
+	rm -f $(EXECUTABLES) $(EXTRA_FILES) *.o 2> /dev/null

@@ -2,21 +2,11 @@
 #include <stdlib.h>
 #include <math.h>
 
-typedef unsigned short int bool;
-#define true 1
-#define false 0
+#include "util.h"
 
 int nb_var, nb_clause;
 
-#define NMAXVAR 9
 int vars[NMAXVAR];
-
-int _line = 0;
-int useLine();
-
-int _ghost = 0;
-void initGhost();
-int useGhost();
 
 int main(int argc, char *argv[]) {
 	FILE *f_dimacs, *f_3sat;
@@ -60,7 +50,8 @@ int main(int argc, char *argv[]) {
 	//fprintf(f_3sat, "\n");
 	fprintf(f_3sat, "p cnf %i %i\n", nb_var, nb_clause);
 	
-	initGhost();
+	initGhost(nb_var);
+	initLine();
 	
 	var = -1;
 	while (!feof(f_dimacs))
@@ -120,25 +111,11 @@ int main(int argc, char *argv[]) {
 	
 	// On réecrit le header pour actualiser le nombre de clause
 	rewind(f_3sat);
-	fprintf(f_3sat, "p cnf %i %i\n", nb_var + _ghost, _line);
+	fprintf(f_3sat, "p cnf %i %i\n", getGhost(), getLine());
 	
 	fclose(f_dimacs);
 	fclose(f_3sat);
 	
 	return EXIT_SUCCESS;
-}
-
-int useLine() {
-	_line++;
-	return _line;
-}
-
-void initGhost() {
-	_ghost = nb_var;
-}
-
-int useGhost() {
-	_ghost++;
-	return _ghost;
 }
 
