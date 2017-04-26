@@ -13,6 +13,7 @@ int main(int argc, char *argv[]) {
 	char ch;
 	int i, j, var, g, g1, g2;
 	
+	// Check number of argument
 	if (argc != 3)
 	{
 		fprintf(stderr, "%s: Error: Two arguments are missing.", argv[0]);
@@ -33,7 +34,7 @@ int main(int argc, char *argv[]) {
 		exit(-3);
 	}
 	
-	// Lecture du header
+	// Reading header
 	fscanf(f_dimacs, "%c", &ch);
 	if (ch != 'p') exit(EXIT_FAILURE);
 	
@@ -47,8 +48,7 @@ int main(int argc, char *argv[]) {
 	
 	printf("nb var : %i\nnb clause : %i\n", nb_var, nb_clause);
 	
-	//fprintf(f_3sat, "\n");
-	fprintf(f_3sat, "p cnf %i %i\n", nb_var, nb_clause);
+	fprintf(f_3sat, "p cnf %i %i                     \n", nb_var, nb_clause);
 	
 	initGhost(nb_var);
 	initLine();
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 	var = -1;
 	while (!feof(f_dimacs))
 	{
-		fscanf(f_dimacs, "%c", &ch); // Récupération \n
+		fscanf(f_dimacs, "%c", &ch); // Get '\n'
 		fscanf(f_dimacs, "%i", &var);
 		for (i = 0 ; var != 0 ; i++)
 		{
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 			fscanf(f_dimacs, "%i", &var);
 		}
 		
-		// Le nombre d'élément dans la ligne est i. On fait un disjonction de cas:
+		// i is the number of element in the line:
 		if (i == 1)
 		{
 			g1 = useGhost();
@@ -109,9 +109,9 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	
-	// On réecrit le header pour actualiser le nombre de clause
+	// Rewriting header to refresh the number of clauses
 	rewind(f_3sat);
-	fprintf(f_3sat, "p cnf %i %i\n", getGhost(), getLine());
+	fprintf(f_3sat, "p cnf %i %i", getGhost(), getLine());
 	
 	fclose(f_dimacs);
 	fclose(f_3sat);

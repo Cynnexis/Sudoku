@@ -6,18 +6,17 @@
 
 unsigned int tab[NMAX][NMAX];
 
-// Table pour le kcl (l'indicage commence à 1)
+// Array for kcl (indexes begin at 1)
 bool kcl[NMAX+1][NMAX+1][NMAX+1];
-// Table pour le kabxy (l'indicage commence à 1)
-bool kabxy[NMAX+1][3+1][3+1][3+1][3+1];
 
 int main(int argc, char *argv[]) {
-	int x, y, z, a, b, c, k, l, i, j;
+	int x, y, z, c, k, l, i, j;
 	int c1, c2;
 	unsigned char ch;
 	
 	FILE *f_sudoku, *f_dimacs;
 	
+	// Check number of argument
 	if (argc != 3)
 	{
 		fprintf(stderr, "%s: Error: Two arguments are missing.", argv[0]);
@@ -40,71 +39,56 @@ int main(int argc, char *argv[]) {
 		exit(-3);
 	}
 	
-	// Initialisation de counter
+	// Initialization of counter
 	for (i = 0 ; i <= NVAR + 1 ; i++)
 		counter[i] = 0;
 	
-	// Initialisation de kcl
+	// Initialization of kcl
 	for (x = 1 ; x <= NMAX ; x++)
 		for (y = 1 ; y <= NMAX ; y++)
 			for (z = 1 ; z <= NMAX ; z++)
 				kcl[x][y][z] = 0;
 	
-	// Initialisation de kabxy
-	for (k = 1 ; k <= NMAX ; k++)
-		for (a = 1 ; a <= 3 ; a++)
-			for (b = 1 ; b <= 3 ; b++)
-				for (x = 1 ; x <= 3 ; x++)
-					for (y = 1 ; y <= 3 ; y++)
-						kabxy[k][a][b][x][y] = 0;
-	
-	// Remplissage du tableau
+	// Filling array tab
 	for (x = 0 ; x < NMAX ; x++)
 	{
 		for (y = 0 ; y < NMAX  ; y++)
 		{
 			fscanf(f_sudoku, "%c", &ch);
 			if (ch >= '0' && ch <= '9')
-			{
 				tab[x][y] = (int) (ch - '0');
-			}
 			else
-			{
 				y--;
+			
+			// Check the dimension of the grid
+			if (ch == '\n' && (y != -1 || x > 9))
+			{
+				printf("%s: Error: The grid must be 9x9.\n", argv[0]);
+				return -1;
 			}
 		}
 	}
 	
+	// Check the dimension of the grid
+	fscanf(f_sudoku, "%c", &ch);
+	fscanf(f_sudoku, "%c", &ch);
+	if (!feof(f_sudoku))
+	{
+		printf("%s: Error: The grid is too big.\n", argv[0]);
+		return -1;
+	}
+	
+	
+	
+	
 	fclose(f_sudoku);
 	
-	// Définition de kcl
+	// Filling KCL
 	for (x = 1 ; x <= NMAX ; x++)
 		for (y = 1 ; y <= NMAX  ; y++)
 			kcl[tab[x-1][y-1]][x][y] = 1;
 	
-	// Définition de kabxy
-	for (c = 1 ; c <= NMAX ; c++)
-	{
-		for (l = 1 ; l <= NMAX  ; l++)
-		{
-			if (c % 3 == 0 && l % 3 == 0)
-				kabxy[tab[c-1][l-1]][(int) ceil(c/3.0)][(int) ceil(l/3.0)][3][3] = 1;
-			else if (c % 3 == 0)
-				kabxy[tab[c-1][l-1]][(int) ceil(c/3.0)][(int) ceil(l/3.0)][3][l%3] = 1;
-			else if (l % 3 == 0)
-				kabxy[tab[c-1][l-1]][(int) ceil(c/3.0)][(int) ceil(l/3.0)][c%3][3] = 1;
-			else
-				kabxy[tab[c-1][l-1]][(int) ceil(c/3.0)][(int) ceil(l/3.0)][c%3][l%3] = 1;
-		}
-	}
-	
-	
-	
-	
-	
-	
-	// Affichage de la grille de sudoku
-	afficherGrille(tab);
+	showGrid(tab);
 	
 	
 	
@@ -117,7 +101,7 @@ int main(int argc, char *argv[]) {
 		exit(-3);
 	}
 	
-	fprintf(f_dimacs, "p cnf %i %i\n", NB_VARIABLES, NB_CLAUSES); // 22113 sans compter les doublons et les ghosts, 22842 sans compter les ghosts, 25345 avec doublons et ghosts, 22842 sans optimisations (i != ...)
+	fprintf(f_dimacs, "p cnf %i                      \n", NB_VARIABLES);
 	
 	for (k = 1 ; k <= 9 ; k++)
 	{
@@ -149,25 +133,21 @@ int main(int argc, char *argv[]) {
 		}
 		
 		// Hyp 2
-		for (a = 1 ; a <= 3 ; a++)
+		for (c = 1 ; c <= 9 ; c++)
 		{
-			for (b = 1 ; b <= 3 ; b++)
+			for (l = 1 ; l <= 9 ; l++)
 			{
-				for (x = 1 ; x <= 3 ; x++)
+				x = (int) (floor((c - 1)/3)*3 + 1);
+				y = (int) (floor((l - 1)/3)*3 + 1);
+				for (i = x ; i <= x + 2 ; i++)
 				{
-					for (y = 1 ; y <= 3 ; y++)
+					for (j = y ; j <= y + 2 ; j ++)
 					{
-						for (i = 1 ; i <= 3 ; i++)
+						if (i != c || j != l)
 						{
-							for (j = 1 ; j <= 3 ; j++)
-							{
-								if (i != x || j != y) // TODO: && ou || ?
-								{
-	c1 = useCounter(k * 10000 + a * 1000 + b * 100 + x * 10 + y);
-	c2 = useCounter(k * 10000 + a * 1000 + b * 100 + i * 10 + j);
-	fprintf(f_dimacs, "-%i -%i 0\n", c1, c2); useLine();
-								}
-							}
+							c1 = useCounter(k * 100 + c * 10 + l);
+							c2 = useCounter(k * 100 + i * 10 + j);
+							fprintf(f_dimacs, "-%i -%i 0\n", c1, c2); useLine();
 						}
 					}
 				}
@@ -214,70 +194,47 @@ int main(int argc, char *argv[]) {
 		}
 		
 		// Hyp 6
-		for (a = 1 ; a <= 3 ; a++)
+		for (x = 0 ; x <= 2 ; x++)
 		{
-			for (b = 1 ; b <= 3 ; b++)
+			for (y = 0 ; y <= 2 ; y++)
 			{
-				for (x = 1 ; x <= 3 ; x++)
+				for (c = 3*x + 1 ; c <= 3*x + 3 ; c++)
 				{
-					for (y = 1 ; y <= 3 ; y++)
+					for (l = 3*y + 1 ; l <= 3*y + 3 ; l++)
 					{
-						c1 = useCounter(k * 10000 + a * 1000 + b * 100 + x * 10 + y);
+						c1 = useCounter(k * 100 + c * 10 + l);
 						fprintf(f_dimacs, "%i ", c1);
 					}
 				}
 				fprintf(f_dimacs, "0\n"); useLine();
 			}
 		}
-		
-		// Hyp 7
+	}
+	
+	// Initial conditions
+	for (k = 1 ; k <= 9 ; k++)
+	{
 		for (c = 1 ; c <= 9 ; c++)
 		{
 			for (l = 1 ; l <= 9 ; l++)
 			{
-				a = (int) ceil(c/3);
-				b = (int) ceil(l/3);
-				
-				x = c % 3;
-				y = l % 3;
-				
-				
-				x = (x == 0 ? 3 : x);
-				y = (y == 0 ? 3 : y);
-				
-				
-				
-				c1 = useCounter(k * 100 + c * 10 + l);
-				c2 = useCounter(k * 10000 + a * 1000 + b * 100 + x * 10 + y);
-				fprintf(f_dimacs, "-%i %i 0\n", c1, c2); useLine();
-				fprintf(f_dimacs, "%i -%i 0\n", c1, c2); useLine();
+				if (kcl[k][c][l] != 0)
+				{
+					c1 = useCounter(k * 100 + c * 10 + l);
+					fprintf(f_dimacs, "%i 0\n", c1);
+					useLine();
+				}
 			}
 		}
 	}
 	
-	// Validation des variable dans la grille (mise en place des conditions initiales)
-	// kcl
-	for (k = 1 ; k <= 9 ; k++)
-		for (c = 1 ; c <= 9 ; c++)
-			for (l = 1 ; l <= 9 ; l++)
-				if (kcl[k][c][l] != 0)
-					fprintf(f_dimacs, "%i 0\n", useCounter(k * 100 + c * 10 + l)); useLine();
-	
-	// kabxy
-	/*for (k = 1 ; k <= 9 ; k++)
-		for (a = 1 ; a <= 3 ; a++)
-			for (b = 1 ; b <= 3 ; b++)
-				for (x = 1 ; x <= 3 ; x++)
-					for (y = 1 ; y <= 3 ; y++)
-						if (kabxy[k][a][b][x][y] != 0)
-							fprintf(f_dimacs, "%i 0\n", useCounter(k * 10000 + a * 1000 + b * 100 + x * 10 + y)); useLine();*/
-	
-	// On réecrit le header pour actualiser le nombre de clause
-	rewind(f_dimacs);
-	fprintf(f_dimacs, "p cnf %i %i\n", NB_VARIABLES, getLine());
+	// Rewriting header to refresh the number of clauses
+	fseek(f_dimacs, 0, SEEK_SET);
+	fprintf(f_dimacs, "p cnf %i %i", NB_VARIABLES, getLine());
 	
 	fclose(f_dimacs);
 	
+	// Exporting counter to solver
 	exportCounter();
 	
 	return EXIT_SUCCESS;

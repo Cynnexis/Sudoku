@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g
+CFLAGS=-Wall -Werror -g
 EXECUTABLES=interface 3sat solver
 EXTRA_FILES=n-sat.txt 3-sat.txt solution.txt
 
@@ -21,7 +21,7 @@ test: $(EXECUTABLES)
 	./sudoku-solver examples/easy2.txt
 
 open:
-	gedit --new-window interface.c 3sat.c solver.c dimacs.txt easy-solv.txt Makefile sudoku-solver.sh &
+	gedit --new-window interface.c 3sat.c solver.c util.h util.c Makefile sudoku-solver.sh &
 
 clean:
 	rm -f $(EXECUTABLES) $(EXTRA_FILES) *.o 2> /dev/null

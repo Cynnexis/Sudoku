@@ -4,21 +4,8 @@
 
 #include "util.h"
 
-int kabxy2kcl(int i) {
-	int k, a, b, x, y, c, l;
-	y = i % 10;
-	x = ((i - y) % 100) / 10;
-	b = ((i - y - 10 * x) % 1000) / 100;
-	a = ((i - b * 100 - 10* x - y) % 10000) / 1000;
-	k = (i - a * 1000 - b * 100 - 10* x - y) / 10000;
-	
-	c = (a-1)*3+x;
-	l = (b-1)*3+y;
-	return k * 100 + c * 10 + l;
-}
-
-void afficherGrille(unsigned int tab[NMAX][NMAX]) {
-	int x, y, z, t;
+void showGrid(unsigned int tab[NMAX][NMAX]) {
+	int x, y, z;
 	for (x = 0 ; x < NMAX ; x++)
 	{
 		for (y = 0 ; y < NMAX ; y++)
@@ -36,12 +23,50 @@ void afficherGrille(unsigned int tab[NMAX][NMAX]) {
 			printf("\n\033[31;1m");
 			for (z = 0 ; z < NMAX*2+1 ; z++)
 			{
-				printf("-");
+				if ((z+1) % 7 != 0)
+					printf("-");
+				else
+					printf("+");
 			}
 		}
 		printf("\033[0m\n");
 	}
 }
+
+int seekKCL(int compteur) {
+	int i;
+	
+	for (i = 111 ; counter[i] != compteur && i <= NVAR ; i++);
+	
+	return i;
+}
+
+/*int seekKCLinFile(int index) {
+	int i, var;
+	bool valid = false;
+	FILE* import = fopen("export.tmp", "r");
+	
+	if (import == NULL)
+	{
+		perror("export.tmp");
+		exit(-2);
+	}
+	
+	while (!feof(import) && !valid)
+	{
+		fscanf(import, "%i %i\n", &var, &i);
+		
+		if (i == index)
+			valid = true;
+	}
+	
+	fclose(import);
+	
+	if (!valid)
+		return 1000;
+	
+	return var;
+}*/
 
 // Line
 void initLine() {
@@ -99,7 +124,7 @@ int getCount() {
 }
 
 void exportCounter() {
-	int k, c, l, a, b, x, y, i;
+	int k, c, l, i;
 	FILE* export = fopen("export.tmp", "w");
 	
 	if (export == NULL)
@@ -117,21 +142,6 @@ void exportCounter() {
 		if (counter[i] != 0)
 		{
 			fprintf(export, "%i%i%i ", k, c, l);
-			fprintf(export, "%i\n", counter[i]);
-		}
-	}
-	
-	for (i = 11111 ; i <= 93333 ; i++)
-	{
-		if (counter[i] != 0)
-		{
-			y = i % 10;
-			x = ((i - y) % 100) / 10;
-			b = ((i - y - 10 * x) % 1000) / 100;
-			a = ((i - b * 100 - 10* x - y) % 10000) / 1000;
-			k = (i - a * 1000 - b * 100 - 10* x - y) / 10000;
-			
-			fprintf(export, "%i%i%i%i%i ", k, a, b, x, y);
 			fprintf(export, "%i\n", counter[i]);
 		}
 	}

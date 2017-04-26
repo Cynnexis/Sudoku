@@ -12,9 +12,10 @@ int seekKCLinFile(int index);
 
 int main(int argc, char *argv[]) {
 	FILE* f_solv;
-	int number = 0, var = 0, k, x, y, i, j, a, b, c, l;
+	int number = 0, var = 0, k, i, j, c, l;
 	char cc;
 	
+	// Checking the number of argument
 	if (argc != 2)
 	{
 		fprintf(stderr, "%s: Error: One argument is missing.\n", argv[0]);
@@ -31,12 +32,14 @@ int main(int argc, char *argv[]) {
 	
 	fscanf(f_solv, "%c ", &cc);
 	
+	// Check if the solution is unsatisfiable ("UNSAT" in solution.txt)
 	if (cc == 'U')
 	{
 		printf("This set of clauses is unsatisfiable.\n");
 		return EXIT_SUCCESS;
 	}
 	
+	// Check if the solution is satisfiable ("SAT" in solution.txt)
 	if (cc == 'S')
 	{
 		do {
@@ -49,15 +52,16 @@ int main(int argc, char *argv[]) {
 			grille[i][j] = 0;
 	
 	initCounter();
+	// Importing counter from interface
 	importCounter();
 	
+	// Importing solution into grid
 	fscanf(f_solv, "%i", &number);
 	while (number != 0)
 	{
 		if (number > 0)
 		{
 			var = seekKCL(number);
-			//printf("debug> Traitement du compteur %i, associé à kcl %i\n", number, var);
 			
 			if (var >= 111 && var <= 999)
 			{
@@ -67,81 +71,14 @@ int main(int argc, char *argv[]) {
 			
 				grille[c-1][l-1] = k;
 			}
-			
-			/*if (var >= 11111 && var <= NVAR)
-			{
-				y = var % 10;
-				x = ((var - y) % 100) / 10;
-				b = ((var - y - 10 * x) % 1000) / 100;
-				a = ((var - b * 100 - 10* x - y) % 10000) / 1000;
-				k = (var - a * 1000 - b * 100 - 10* x - y) / 10000;
-				
-				grille[(a-1)*3+x][(b-1)*3+y] = k;
-			}*/
 		}
 		
 		fscanf(f_solv, "%i", &number);
 	}
 	
 	fclose(f_solv);
-			
-	// Affichage de la grille de sudoku
-	afficherGrille(grille);
-	/*int z;
-	for (x = 0 ; x < NMAX ; x++)
-	{
-		for (y = 0 ; y < NMAX ; y++)
-		{
-			if (y % 3 == 0 && y != 0)
-				printf("\033[31;1m|\033[0m");
-			printf("%i ", grille[x][y]);
-		}
-
-		if (x % 3 == 2 && x != 0 && x != NMAX-1)
-		{
-			printf("\n\033[31;1m");
-			for (z = 0 ; z < NMAX*2+1 ; z++)
-			{
-				printf("-");
-			}
-		}
-		printf("\033[0m\n");
-	}*/
+	
+	showGrid(grille);
 	
 	return EXIT_SUCCESS;
-}
-
-int seekKCL(int compteur) {
-	int i;
-	
-	for (i = 111 ; counter[i] != compteur && i <= NVAR ; i++);
-	
-	return i;
-}
-
-int seekKCLinFile(int index) {
-	int i, var;
-	bool valid = false;
-	FILE* import = fopen("export.tmp", "r");
-	
-	if (import == NULL)
-	{
-		perror("export.tmp");
-		exit(-2);
-	}
-	
-	while (!feof(import) && !valid)
-	{
-		fscanf(import, "%i %i\n", &var, &i);
-		
-		if (i == index)
-			valid = true;
-	}
-	
-	fclose(import);
-	
-	if (!valid)
-		return 1000;
-	
-	return var;
 }
